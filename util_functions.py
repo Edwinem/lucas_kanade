@@ -108,5 +108,4 @@ def img2world(pt,K):
 def world2img(pt,K):
     new_pt=np.copy(pt)
     new_pt=new_pt/new_pt[2]
-    new_pt[]
 
