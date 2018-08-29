@@ -2,6 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 import numpy as np
+import util_functions as util
 
 
 
@@ -98,24 +99,17 @@ class RBWarpEuler321(BaseWarp):
 
     def __init__(self):
         super().__init__(self, 6)
-        self.psi = 0
-        self.theta=0
-        self.phi=0
-        self.tx = 0
-        self.ty = 0
-        self.tz=0
         self.rot=np.zeros((3,3))
         self.trans=np.zeros((3,1))
 
-    def set_params(self, psi,theta,phi,tx,ty,tz):
-        self.psi = psi
-        self.theta=theta
-        self.phi=phi
-        self.tx = tx
-        self.ty = ty
-        self.tz=tz
 
-    def warp_point(self, point):
+    def set_params(self,twist):
+        mat=util.twist_2_mat44(twist)
+        self.rot=mat[0:3,0:3]
+        self.trans=mat[3,0:3]
+
+
+    def warp_point(self, point,K):
         x = np.cos(self.theta) * point[0] + np.sin(self.theta) * point[1] + self.tx
         y = -np.sin(self.theta) * point[0] + np.cos(self.theta) * point[1] + self.ty
         return np.array([x, y])
