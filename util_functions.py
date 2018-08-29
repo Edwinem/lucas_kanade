@@ -2,6 +2,13 @@ import numpy as np
 
 
 def bilinear_interp(img, x_loc, y_loc):
+    '''
+    Does bilinear interpolation for a point in the image
+    :param img: Image
+    :param x_loc:
+    :param y_loc:
+    :return:
+    '''
     xi = int(x_loc)
     yi = int(y_loc)
     top_left = img[yi][xi]
@@ -14,26 +21,13 @@ def bilinear_interp(img, x_loc, y_loc):
     return val
 
 
-def mat44_2_vec6(mat44):
-    rot = mat44[0:3, 0:3]
-    sy = np.sqrt(rot(0, 0) * rot(0, 0) + rot(1, 0) * rot(1, 0))
-
-    out_vec = np.zeros((6, 1))
-
-    if not sy < 1e-6:
-        out_vec[0] = np.arctan2(rot(2, 1), rot(2, 2))
-        out_vec[1] = np.arctan2(-rot(2, 0), sy)
-        out_vec[2] = np.arctan2(rot(1, 0), rot(0, 0))
-    else:
-        out_vec[0] = np.arctan2(-rot(1, 2), rot(1, 1))
-        out_vec[1] = np.arctan2(-rot(2, 0), sy)
-        out_vec[2] = 0
-
-    out_vec[0:3] = mat44[3, 0:3]
-    return out_vec
-
-
 def symmetrix_skew(vec3):
+    '''
+    Creates a 3x3 symmetrix skew matrix for a vector x3. This can be used for instance as a cross product or in other
+    applications
+    :param vec3: Vector of size 3
+    :return:
+    '''
     output = np.zeros((3, 3))
     output[0, 0] = 0
     output[0, 1] = -vec3(2)
@@ -48,6 +42,14 @@ def symmetrix_skew(vec3):
 
 
 def transform_mat_2_twist(mat44):
+    '''
+    Converts a homogenous 4x4 transformation matrix to its twist form(vector x6)
+    :param mat44:
+    :return: Vector of size 6 representing the twist
+
+    See lie algebra or rodrigues (https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula)
+
+    '''
     rot = mat44[0:3,0:3]
 
     theta = np.arccos(0.5 * (rot.trace() - 1))
@@ -75,6 +77,13 @@ def transform_mat_2_twist(mat44):
     return ret
 
 def twist_2_mat44(twist_vec):
+    '''
+    Transform a twist vector (x6) to a homogenous 4x4 Transformation matrix
+    :param twist_vec:
+    :return: 4x4 matrix
+
+    See lie algebra or rodrigues
+    '''
     ret=np.eye(4)
 
     theta = np.linalg.norm((twist_vec[0:3]))
@@ -91,10 +100,29 @@ def twist_2_mat44(twist_vec):
 
     else:
         ret[0:3,3][:]=twist_vec[3:6].reshape(3)
-        #ret_trans.reshape(3,1) = twist_vec[3:6]
 
 
     return ret
+
+
+def mat44_2_vec6(mat44):
+    rot = mat44[0:3, 0:3]
+    sy = np.sqrt(rot(0, 0) * rot(0, 0) + rot(1, 0) * rot(1, 0))
+
+    out_vec = np.zeros((6, 1))
+
+    if not sy < 1e-6:
+        out_vec[0] = np.arctan2(rot(2, 1), rot(2, 2))
+        out_vec[1] = np.arctan2(-rot(2, 0), sy)
+        out_vec[2] = np.arctan2(rot(1, 0), rot(0, 0))
+    else:
+        out_vec[0] = np.arctan2(-rot(1, 2), rot(1, 1))
+        out_vec[1] = np.arctan2(-rot(2, 0), sy)
+        out_vec[2] = 0
+
+    out_vec[0:3] = mat44[3, 0:3]
+    return out_vec
+
 
 
 def img2world(pt,K):
