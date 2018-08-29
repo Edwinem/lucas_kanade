@@ -138,3 +138,11 @@ def world2img(pt,K):
     new_pt=np.copy(pt)
     new_pt=new_pt/new_pt[2]
 
+
+def load_tum_depth(filepath):
+    #sdafdsaf
+    d=0
+
+def TsukubaCameraK():
+    return np.matrix([[615.0,0,320],[0,615.0,240],[0,0,1]])
+

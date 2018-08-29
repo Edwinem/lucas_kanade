@@ -8,7 +8,7 @@ from lk import ForwardAdditive2D
 from warps import EuclideanWarp
 
 #Load image
-image=io.imread('tum_img1.png',as_grey=True)
+image=io.imread('test_data/tum_img1.png',as_grey=True)
 
 # Lets scale it down so we don't take forever to run
 img=rescale(image,.5,mode='reflect')
