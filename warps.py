@@ -26,6 +26,10 @@ class BaseWarp:
     @abstractmethod
     def warp_point3d(self,point,K): pass
 
+    #Warp a 3d point
+    @abstractmethod
+    def warp_pointcloud(self,point,K): pass
+
     #Calculate the jacobian of the warp of a single point
     @abstractmethod
     def calc_warp_jac(self,point): pass
@@ -33,6 +37,10 @@ class BaseWarp:
     #Calculate the jacobian of the warp of multiple points
     @abstractmethod
     def calc_warp_jacs(self,points): pass
+
+    #Calculate the jacobian of the warp of multiple points
+    @abstractmethod
+    def calc_warp3d_jacs(self,pointcloud): pass
 
     #Update the parameters using the forward additive method
     @abstractmethod

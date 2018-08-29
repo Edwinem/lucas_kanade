@@ -125,13 +125,14 @@ def mat44_2_vec6(mat44):
 
 
 
-def img2world(pt,K):
-    new_pt=np.matrix((3,1))
-    new_pt[0,0]=(pt[0]-K[0,2])/K[0,0]
-    new_pt[1,0]=(pt[1]-K[1,2])/K[1,1]
-    new_pt=new_pt*pt[2]
-    new_pt[2]=pt[2]
-    return new_pt
+def img2world(pts, K):
+    pointcloud=np.copy(pts)
+
+    pointcloud[:, 0]= (pointcloud[:, 0] - K[0, 2]) / K[0, 0]
+    pointcloud[:, 1] = (pointcloud[:, 1] - K[1, 2]) / K[1, 1]
+    pointcloud[:, 0]= pointcloud[:, 0] * pointcloud[:, 2]
+    pointcloud[:, 1] = pointcloud[:, 1] * pointcloud[:, 2]
+    return pointcloud
 
 def world2img(pt,K):
     new_pt=np.copy(pt)

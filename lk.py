@@ -35,7 +35,9 @@ class ForwardAdditive2D(LKMethod):
 
     def run_level(self, ref_img, cur_img, initial_warp, max_iter=20, show_debug=False):
 
-
+        img_object=0
+        if(show_debug):
+            img_object=plt.imshow(ref_img,cmap="gray")
 
         jac_size = initial_warp.jac_size
 
@@ -140,10 +142,9 @@ class ForwardAdditive2D(LKMethod):
                 squarer = lambda t: np.sqrt(t ** 2)
                 vfunc = np.vectorize(squarer)
                 diff = vfunc(diff)
-                plt.imshow(diff, cmap="gray")
-                plt.show(block=False)
-                plt.pause(2)
-                plt.close()
+                img_object.set_data(diff)
+                plt.pause(.1)
+                plt.draw()
 
 
 ###EVERYTHING BELOW THIS LINE IS WORK IN PROGRESS
@@ -154,9 +155,10 @@ class ForwardCompositional(LKMethod):
 
 
 
-    def run_level(self, ref_img, cur_img, initial_warp, max_iter=20, show_debug=False):
+    def run_level(self, ref_img_pts,intensities, ref_img,cur_img, initial_warp,K, max_iter=20, show_debug=False):
+        assert (ref_img_pts.shape[1]==3)
 
-
+        assert (ref_img_pts.shape[0]==intensities.shape[1] or ref_img_pts.shape[0]==intensities.shape[0])
 
         jac_size = initial_warp.jac_size
 
@@ -167,27 +169,22 @@ class ForwardCompositional(LKMethod):
 
         rows, cols = cur_img.shape
 
-        residuals = []
+
+        #Build the pointcloud that we use to warp the pts
+        pointcloud=img2world(ref_img_pts,K)
+
+
+        grads = np.empty((ref_img_pts.shape[0], 2))  # gradients
+        valid = np.ones((ref_img_pts.shape[0]))      #validity vector of pts 1 is valid 0 is invalid
+
 
         grad_imx = filters.sobel_v(cur_img)
         grad_imy = filters.sobel_h(cur_img)
 
-        # Preallocating arrays
-        # Stored as  | x1, x2, ...
-        #            | y1, y2, ...
-        pts = np.empty((rows * cols, 2))    # Points in the original image
-        grads = np.empty((rows * cols, 2))  # gradients
+        #In forward compositional this can be precomputed
+        dW_dp = initial_warp.calc_warp3d_jacs(pointcloud,K)
 
-        valid = np.ones((rows * cols))      #validity vector of pts 1 is valid 0 is invalid
-        intensities = np.empty((rows * cols)) #vector which stores the intensities of the warped pts
 
-        #Populate the original pts. They are just all the pts in an image
-        index = 0
-        for r in range(0, rows-1):
-            for c in range(0, cols-1):
-                pts[index][0] = c
-                pts[index][1] = r
-                index = index + 1
 
         prev_err = 200000000
         for iter in range(0, max_iter):
@@ -201,7 +198,7 @@ class ForwardCompositional(LKMethod):
             num_valid = 0
 
             #Warp the pts with the given estimate
-            new_pts = initial_warp.warp_points(pts)
+            new_pts = initial_warp.warp_pointcloud(pointcloud)
 
 
             #For every warped pt. Check if it ends up in the image.
@@ -212,15 +209,10 @@ class ForwardCompositional(LKMethod):
                 else:
                     #Position is valid lets check the intensity
                     intensities[idx] = bilinear_interp(cur_img, pt[0], pt[1])
-                    if (intensities[idx] == 0): #This removes any artifcats we may have due to the warp function
-                        valid[idx] = 0
-                        continue
                     #Pt is valid lets calculate the gradients in the cur image
                     grads[idx][0] = bilinear_interp(grad_imx, pt[0], pt[1])
                     grads[idx][1] = bilinear_interp(grad_imy, pt[0], pt[1])
 
-            #Calculate the warp jacobian
-            dW_dp = initial_warp.calc_warp_jacs(pts)
 
             #Here we build the linear system. A point is only added if it is valid
             for idx in range(0, len(valid)):
