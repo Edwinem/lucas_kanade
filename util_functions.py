@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 
 def bilinear_interp(img, x_loc, y_loc):
@@ -145,4 +146,13 @@ def load_tum_depth(filepath):
 
 def TsukubaCameraK():
     return np.matrix([[615.0,0,320],[0,615.0,240],[0,0,1]])
+
+def pyrdown_median(image):
+    blurred=cv2.medianBlur(image,3)
+    rows,cols=image.shape
+    new_img=np.empty((int(rows/2),int(cols/2)),dtype=image.dtype)
+    for r in range(0,new_img.shape[0]):
+        for c in range(0,new_img.shape[1]):
+            new_img[r][c]=blurred[r*2,c*2]
+    return new_img
 
