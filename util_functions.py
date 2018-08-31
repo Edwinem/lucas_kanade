@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 
 def bilinear_interp(img, x_loc, y_loc):
@@ -139,10 +140,41 @@ def world2img(pt,K):
     new_pt=new_pt/new_pt[2]
 
 
-def load_tum_depth(filepath):
-    #sdafdsaf
-    d=0
+def load_tum_depth(filename):
+    '''
+    Loads a tum depth image, and scales it to meters
+    :param filename: Filepath to image in tum format. Is of type .png
+    :return: A 2d image stored as floats with the units in meters
+
+    TUM stores their depth images as uint16 and are scaled by 5000 (e.g 1meter=5000). So this functions takes care
+    of loading the image and scaling it properly
+
+    '''
+    depth_img=cv2.imread(filename)
+    depth_img=depth_img.astype(float)
+    depth_img[:]=depth_img[:]/5000.0
+    return depth_img
+
 
 def TsukubaCameraK():
     return np.matrix([[615.0,0,320],[0,615.0,240],[0,0,1]])
+
+def pyrdown_cam_matrix(K):
+    '''
+    Scales down a camera matrix (fx,fy,cx,cy)
+    :param K: 3x3 camera matrix
+    :return:
+
+    See LSD-SLAM specifically this file
+    https://github.com/tum-vision/lsd_slam/blob/master/lsd_slam_core/src/DataStructures/Frame.cpp
+
+
+    '''
+    new_K=np.eye(3)
+    new_K[0,0]=K[0,0]*0.5 #fx
+    new_K[1,1]=K[1,1]*0.5 #fy
+
+    #The weird .5 comes from the fact that we assume pixel centers are at 0.5 not at (0,0)
+    new_K[0,2]=K[0,2]+0.5/2-0.5  #cx
+    new_K[1, 2] = K[1, 2] + 0.5 / 2 - 0.5  #cy
 
