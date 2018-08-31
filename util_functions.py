@@ -159,6 +159,7 @@ def load_tum_depth(filename):
 def TsukubaCameraK():
     return np.matrix([[615.0,0,320],[0,615.0,240],[0,0,1]])
 
+<<<<<<< HEAD
 def pyrdown_cam_matrix(K):
     '''
     Scales down a camera matrix (fx,fy,cx,cy)
@@ -177,4 +178,14 @@ def pyrdown_cam_matrix(K):
     #The weird .5 comes from the fact that we assume pixel centers are at 0.5 not at (0,0)
     new_K[0,2]=K[0,2]+0.5/2-0.5  #cx
     new_K[1, 2] = K[1, 2] + 0.5 / 2 - 0.5  #cy
+=======
+def pyrdown_median(image):
+    blurred=cv2.medianBlur(image,3)
+    rows,cols=image.shape
+    new_img=np.empty((int(rows/2),int(cols/2)),dtype=image.dtype)
+    for r in range(0,new_img.shape[0]):
+        for c in range(0,new_img.shape[1]):
+            new_img[r][c]=blurred[r*2,c*2]
+    return new_img
+>>>>>>> a816fedf64cee49001c8514428cbc4773ab227c4
 
