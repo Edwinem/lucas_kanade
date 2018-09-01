@@ -4,7 +4,7 @@ import cv2
 
 def bilinear_interp(img, x_loc, y_loc):
     '''
-    Does bilinear interpolation for a point in the image
+    Does bilinear interpolation for a<<<<<<< HEAD point in the image
     :param img: Image
     :param x_loc:
     :param y_loc:
@@ -31,13 +31,13 @@ def symmetrix_skew(vec3):
     '''
     output = np.zeros((3, 3))
     output[0, 0] = 0
-    output[0, 1] = -vec3(2)
-    output[0, 2] = vec3(1)
-    output[1, 0] = vec3(2)
+    output[0, 1] = -vec3[2]
+    output[0, 2] = vec3[1]
+    output[1, 0] = vec3[2]
     output[1, 1] = 0
-    output[1, 2] = -vec3(0)
-    output[2, 0] = -vec3(1)
-    output[2, 1] = vec3(0)
+    output[1, 2] = -vec3[0]
+    output[2, 0] = -vec3[1]
+    output[2, 1] = vec3[0]
     output[2, 2] = 0
     return output
 
@@ -51,7 +51,7 @@ def transform_mat_2_twist(mat44):
     See lie algebra or rodrigues (https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula)
 
     '''
-    rot = mat44[0:3,0:3]
+    rot = mat44[0:3, 0:3]
 
     theta = np.arccos(0.5 * (rot.trace() - 1))
 
@@ -64,18 +64,19 @@ def transform_mat_2_twist(mat44):
         b = (1.0 - c) * (1.0 / (theta * theta))
 
         W = (theta / (2 * s)) * (rot - rot.transpose())
-        V = np.eye(3) - 0.5 * W + (1 / (theta * theta)) * (1-(a / (2 * b))) * W * W
+        V = np.eye(3) - 0.5 * W + (1 / (theta * theta)) * (1 - (a / (2 * b))) * W * W
         ret[0:3] = (W(2, 1), W(0, 2), W(1, 0))
 
-        ret_trans=ret[3:6]
-        ret_trans=ret_trans.reshape(3,1)
+        ret_trans = ret[3:6]
+        ret_trans = ret_trans.reshape(3, 1)
         ret_trans = (V * mat44[3, 0:3]).reshape(3)
     else:
-        ret_trans=ret[3:6]
-        ret_trans=ret_trans.reshape(3,1)
-        ret_trans = ( mat44[3, 0:3]).reshape(3)
+        ret_trans = ret[3:6]
+        ret_trans = ret_trans.reshape(3, 1)
+        ret_trans = (mat44[3, 0:3]).reshape(3)
 
     return ret
+
 
 def twist_2_mat44(twist_vec):
     '''
@@ -85,23 +86,22 @@ def twist_2_mat44(twist_vec):
 
     See lie algebra or rodrigues
     '''
-    ret=np.eye(4)
+    ret = np.eye(4)
 
     theta = np.linalg.norm((twist_vec[0:3]))
-    if(theta > 1e-8):
+    if (theta > 1e-8):
         a = np.sin(theta)
         b = 1.0 - np.cos(theta)
         t_i = 1.0 / theta
-        S = t_i * symmetrix_skew( twist_vec[0:2] )
+        S = t_i * symmetrix_skew(twist_vec[0:3])
         S2 = S * S
         I = np.eye(3)
 
-        ret[0:3,0:3] = I + a*S + b*S2
-        ret[0:3,3] = (I + b*t_i*S + (theta - a)*t_i*S2) * twist_vec[3:6]
+        ret[0:3, 0:3] = I + a * S + b * S2
+        ret[0:3, 3] = I + b * t_i * S + (theta - a) * t_i * S2) * twist_vec[3:6]
 
     else:
-        ret[0:3,3][:]=twist_vec[3:6].reshape(3)
-
+        ret[0:3, 3][:] = twist_vec[3:6].reshape(3)
 
     return ret
 
@@ -125,19 +125,23 @@ def mat44_2_vec6(mat44):
     return out_vec
 
 
-
 def img2world(pts, K):
-    pointcloud=np.copy(pts)
+    pointcloud = np.copy(pts)
 
-    pointcloud[:, 0]= (pointcloud[:, 0] - K[0, 2]) / K[0, 0]
+    pointcloud[:, 0] = (pointcloud[:, 0] - K[0, 2]) / K[0, 0]
     pointcloud[:, 1] = (pointcloud[:, 1] - K[1, 2]) / K[1, 1]
-    pointcloud[:, 0]= pointcloud[:, 0] * pointcloud[:, 2]
+    pointcloud[:, 0] = pointcloud[:, 0] * pointcloud[:, 2]
     pointcloud[:, 1] = pointcloud[:, 1] * pointcloud[:, 2]
     return pointcloud
 
-def world2img(pt,K):
-    new_pt=np.copy(pt)
-    new_pt=new_pt/new_pt[2]
+
+def world2img(pts3d, K):
+    img_pts = np.copy(pts3d)
+    img_pts[:, 0] = img_pts[:, 0] / img_pts[:, 2]
+    img_pts[:, 1] = img_pts[:, 1] / img_pts[:, 2]
+    img_pts[:, 0] = (img_pts[:, 0] * K[0, 0] + K[0, 2])
+    img_pts[:, 1] = (img_pts[:, 1] * K[1, 1] + K[1, 2])
+    return img_pts
 
 
 def load_tum_depth(filename):
@@ -150,42 +154,42 @@ def load_tum_depth(filename):
     of loading the image and scaling it properly
 
     '''
-    depth_img=cv2.imread(filename)
-    depth_img=depth_img.astype(float)
-    depth_img[:]=depth_img[:]/5000.0
+    depth_img = cv2.imread(filename)
+    depth_img = depth_img.astype(float)
+    depth_img[:] = depth_img[:] / 5000.0
     return depth_img
 
 
 def TsukubaCameraK():
-    return np.matrix([[615.0,0,320],[0,615.0,240],[0,0,1]])
+    return np.matrix([[615.0, 0, 320], [0, 615.0, 240], [0, 0, 1]])
+
 
 def pyrdown_cam_matrix(K):
     '''
-    Scales down a camera matrix (fx,fy,cx,cy)
+    Scales down a camera matrix (fx,fy,cx,cy) for a image pyramid
     :param K: 3x3 camera matrix
-    :return:
+    :return: scaled down K matrix
 
     See LSD-SLAM specifically this file
     https://github.com/tum-vision/lsd_slam/blob/master/lsd_slam_core/src/DataStructures/Frame.cpp
 
 
     '''
-    new_K=np.eye(3)
-    new_K[0,0]=K[0,0]*0.5 #fx
-    new_K[1,1]=K[1,1]*0.5 #fy
+    new_K = np.eye(3)
+    new_K[0, 0] = K[0, 0] * 0.5  # fx
+    new_K[1, 1] = K[1, 1] * 0.5  # fy
 
-    #The weird .5 comes from the fact that we assume pixel centers are at 0.5 not at (0,0)
-    new_K[0,2]=K[0,2]+0.5/2-0.5  #cx
-    new_K[1, 2] = K[1, 2] + 0.5 / 2 - 0.5  #cy
+    # The weird .5 comes from the fact that we assume pixel centers are at 0.5 not at (0,0)
+    new_K[0, 2] = (K[0, 2] + 0.5) / 2 - 0.5  # cx
+    new_K[1, 2] = (K[1, 2] + 0.5) / 2 - 0.5  # cy
     return new_K
 
 
 def pyrdown_median(image):
-    blurred=cv2.medianBlur(image,3)
-    rows,cols=image.shape
-    new_img=np.empty((int(rows/2),int(cols/2)),dtype=image.dtype)
-    for r in range(0,new_img.shape[0]):
-        for c in range(0,new_img.shape[1]):
-            new_img[r][c]=blurred[r*2,c*2]
+    blurred = cv2.medianBlur(image, 3)
+    rows, cols = image.shape
+    new_img = np.empty((int(rows / 2), int(cols / 2)), dtype=image.dtype)
+    for r in range(0, new_img.shape[0]):
+        for c in range(0, new_img.shape[1]):
+            new_img[r][c] = blurred[r * 2, c * 2]
     return new_img
-

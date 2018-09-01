@@ -158,7 +158,7 @@ class ForwardCompositional(LKMethod):
     def run_level(self, ref_img_pts,ref_intensities, ref_img,cur_img, initial_warp,K, max_iter=20, show_debug=False):
         assert (ref_img_pts.shape[1]==3)
 
-        assert (ref_img_pts.shape[0]==ref_intensities.shape[1] or ref_img_pts.shape[0]==ref_intensities.shape[0])
+        assert ( ref_img_pts.shape[0]==ref_intensities.shape[0])
 
         jac_size = initial_warp.jac_size
 
@@ -199,7 +199,7 @@ class ForwardCompositional(LKMethod):
             num_valid = 0
 
             #Warp the pts with the given estimate
-            new_pts = initial_warp.warp_pointcloud(pointcloud)
+            new_pts = initial_warp.warp_pointcloud(pointcloud,K)
 
 
             #For every warped pt. Check if it ends up in the image.
@@ -220,13 +220,13 @@ class ForwardCompositional(LKMethod):
                 if valid[idx] == 0:
                     continue
                 # full jacobian dI*dW
-                jac = grads[idx] * dW_dp[idx]
-                jac=jac.transpose()
+                jac = np.dot(grads[idx],dW_dp[idx])
+                jac=jac.reshape((6,1))
                 res = cur_intensities [idx]-ref_intensities[idx] #residual
                 total_err2 = total_err2 + res * res
 
                 Jgrad = Jgrad - jac * res
-                H = H + jac * jac.transpose()
+                H = H + jac*jac.transpose()
                 num_valid = num_valid + 1
 
             #If the error is greater then before then stop iterating
@@ -234,10 +234,10 @@ class ForwardCompositional(LKMethod):
             if (avg_err > prev_err):
                 return False
             prev_err = avg_err
-
+            print(H)
             #Solve the linear system
             update = np.dot(np.linalg.inv(H), Jgrad)
-            initial_warp.update_additive(update)
+            initial_warp.update_fcompositional(update)
 
             #If the update is less than eps then we end the run
             if (np.linalg.norm(update) < self.eps):
